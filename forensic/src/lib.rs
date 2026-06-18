@@ -124,6 +124,30 @@ pub fn analyse(disk: &PhysicalDisk) -> Vec<Finding> {
     findings
 }
 
+/// Analyse a disk you intend to **acquire** (image). Returns everything
+/// [`analyse`] reports for the host overview, plus the acquisition-target-only
+/// `LIVE-WRITABLE` warning when the device is writable — i.e. no hardware
+/// write-blocker is engaged, so imaging could alter the evidence. On a live
+/// host every internal disk is writable, so that condition is omitted from the
+/// overview [`analyse`] (it would fire on every device); it is signal only for
+/// the specific device under acquisition.
+#[must_use]
+pub fn analyse_target(disk: &PhysicalDisk) -> Vec<Finding> {
+    let mut findings = analyse(disk);
+    if !disk.read_only {
+        findings.push(
+            Finding::observation(Severity::High, Category::Integrity, "LIVE-WRITABLE")
+                .source(source(disk))
+                .note(
+                    "acquisition target is writable — no hardware write-blocker is engaged; \
+                     imaging can alter the evidence",
+                )
+                .build(),
+        );
+    }
+    findings
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -157,14 +181,31 @@ mod tests {
     }
 
     #[test]
-    fn writable_disk_flags_live_writable_medium() {
+    fn overview_analyse_omits_live_writable() {
+        // Writable is the baseline on a live host — flagging it on every disk is
+        // noise, so the overview analyser must not emit LIVE-WRITABLE.
         let mut d = clean_disk();
         d.read_only = false;
-        let findings = analyse(&d);
+        assert!(!codes(&analyse(&d)).contains(&"LIVE-WRITABLE"));
+    }
+
+    #[test]
+    fn target_analyse_flags_writable_high() {
+        // Imaging a writable target means no write-blocker is engaged — a real,
+        // high-severity acquisition risk.
+        let mut d = clean_disk();
+        d.read_only = false;
+        let findings = analyse_target(&d);
         let f = findings.iter().find(|f| f.code == "LIVE-WRITABLE").unwrap();
-        assert_eq!(f.severity, Some(Severity::Medium));
+        assert_eq!(f.severity, Some(Severity::High));
         assert_eq!(f.source.analyzer, "livedisk-forensic");
         assert_eq!(f.source.scope, "disk0");
+    }
+
+    #[test]
+    fn target_analyse_write_blocked_has_no_writable() {
+        // A read-only target = write-blocker engaged → reassuring silence.
+        assert!(!codes(&analyse_target(&clean_disk())).contains(&"LIVE-WRITABLE"));
     }
 
     #[test]
