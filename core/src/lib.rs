@@ -54,6 +54,24 @@ mod macos;
 #[cfg(windows)]
 mod windows;
 
+/// Internal parsers of externally-supplied data, exposed **only** under the
+/// `fuzzing` feature for the fuzz harness — not part of the public API. The
+/// wrappers discard results; fuzzing asserts these never panic on malformed
+/// input.
+#[cfg(feature = "fuzzing")]
+#[doc(hidden)]
+pub mod fuzz_api {
+    /// Drive the Windows `DRIVE_LAYOUT_INFORMATION_EX` byte parser.
+    pub fn parse_drive_layout(buf: &[u8]) {
+        let _ = crate::drive_layout::parse_drive_layout(buf);
+    }
+
+    /// Drive the `/proc/mounts` text parser.
+    pub fn parse_mounts(s: &str) {
+        let _ = crate::sysfs::parse_mounts(s);
+    }
+}
+
 /// A whole physical (or, on macOS, synthesized) disk on the live system.
 ///
 /// `size_bytes` and the sector sizes come from the OS/driver layer, not from the

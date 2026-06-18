@@ -18,6 +18,9 @@ name = "livedisk"
 [features]
 default = []
 serde = ["dep:serde"]
+# Exposes the internal parsers (drive-layout bytes, /proc/mounts text) for the
+# fuzz harness only. Not part of the public API; do not enable in production.
+fuzzing = []
 
 [dependencies]
 thiserror = { workspace = true }

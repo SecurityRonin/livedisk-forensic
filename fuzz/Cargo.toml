@@ -1,0 +1,26 @@
+[package]
+name = "livedisk-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+livedisk = { package = "livedisk-core", path = "../core", features = ["fuzzing"] }
+
+[[bin]]
+name = "fuzz_drive_layout"
+path = "fuzz_targets/fuzz_drive_layout.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_mounts"
+path = "fuzz_targets/fuzz_mounts.rs"
+test = false
+doc = false
