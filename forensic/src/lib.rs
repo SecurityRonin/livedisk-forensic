@@ -8,8 +8,10 @@
 //!
 //! - `LIVE-MOUNTED` — a volume is mounted during acquisition (live writes may
 //!   alter the image).
-//! - `LIVE-WRITABLE` — the device is writable; no hardware write-blocker
-//!   detected.
+//! - `LIVE-WRITABLE` — the device being **acquired** is writable (no hardware
+//!   write-blocker engaged). Emitted only by [`analyse_target`], never by the
+//!   host overview [`analyse`] — on a live host every disk is writable, so it
+//!   would fire on every device.
 //! - `LIVE-REMOVABLE` — removable media.
 //! - `LIVE-SECTOR-4KN` — logical/physical sector sizes differ (512e/4Kn).
 //! - `LIVE-SYNTHESIZED` — a synthesized container overlay, not a backing
@@ -66,18 +68,10 @@ pub fn analyse(disk: &PhysicalDisk) -> Vec<Finding> {
         findings.push(builder.build());
     }
 
-    // LIVE-WRITABLE — no write-blocker means acquisition can alter the evidence.
-    if !disk.read_only {
-        findings.push(
-            Finding::observation(Severity::Medium, Category::Integrity, "LIVE-WRITABLE")
-                .source(source(disk))
-                .note(
-                    "device is writable (no hardware write-blocker detected); acquisition can \
-                     alter the evidence",
-                )
-                .build(),
-        );
-    }
+    // LIVE-WRITABLE is intentionally NOT emitted here: on a live host every
+    // internal disk is writable, so flagging it per-device is noise that buries
+    // the discriminating findings. It is signal only for the specific device
+    // being acquired — see `analyse_target`.
 
     // LIVE-REMOVABLE — removable media (provenance/chain-of-custody context).
     if disk.removable {
