@@ -268,6 +268,10 @@ pub fn render_listing(disks: &[PhysicalDisk], width: usize, color: bool) -> Stri
         s.push_str(&overview);
         s.push('\n');
     }
+    // Physical disks are colour-indexed in overview order; the per-disk bar
+    // reuses that index as its accent so a disk's largest partition matches the
+    // colour representing it in the overview.
+    let mut phys_idx = 0;
     for d in disks {
         let kind = if d.synthesized { " (synthesized)" } else { "" };
         let model = d
@@ -295,7 +299,10 @@ pub fn render_listing(disks: &[PhysicalDisk], width: usize, color: bool) -> Stri
             }
             s.push_str("  (volumes share container space)\n");
         } else {
-            s.push_str(&render_disk_bar(d, width, color));
+            s.push_str(&bar::disk_bar(d, width, color, phys_idx));
+        }
+        if !d.synthesized {
+            phys_idx += 1;
         }
         s.push('\n');
     }

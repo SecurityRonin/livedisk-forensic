@@ -139,21 +139,30 @@ pub(super) fn allocate_widths(weights: &[u64], total: usize) -> Vec<usize> {
 
 /// Render the proportional bar plus legend for one disk. `width` is the bar's
 /// inner column count; `color` selects ANSI-coloured solid blocks (TTY) versus
-/// ASCII glyphs (pipe-safe).
+/// ASCII glyphs (pipe-safe). The disk's **largest partition** is drawn in the
+/// primary palette colour.
+#[must_use]
 pub fn render_disk_bar(disk: &PhysicalDisk, width: usize, color: bool) -> String {
+    disk_bar(disk, width, color, 0)
+}
+
+/// Per-disk bar with an explicit `accent` palette slot for the largest
+/// partition — used by [`render_listing`](crate::render_listing) so a disk's
+/// dominant partition matches the colour that disk has in the all-storage
+/// overview. The remaining partitions take the other palette colours in order.
+pub(crate) fn disk_bar(disk: &PhysicalDisk, width: usize, color: bool, accent: usize) -> String {
+    let accent = accent % PALETTE.len();
     let segs = segments(disk);
     let weights: Vec<u64> = segs.iter().map(|s| s.size_bytes).collect();
     let widths = allocate_widths(&weights, width);
+    let slots = partition_slots(&segs, accent);
 
     // ── Bar ──────────────────────────────────────────────────────────────────
     let mut out = String::new();
     out.push('[');
     for (seg, &w) in segs.iter().zip(&widths) {
         match seg.index {
-            Some(idx) => {
-                let slot = (idx - 1) % PALETTE.len();
-                push_slice(&mut out, color, PALETTE[slot], GLYPHS[slot], w);
-            }
+            Some(idx) => push_slice(&mut out, color, PALETTE[slots[idx]], GLYPHS[slots[idx]], w),
             None => push_slice(&mut out, color, FREE_ANSI, FREE_GLYPH, w),
         }
     }
@@ -166,11 +175,10 @@ pub fn render_disk_bar(disk: &PhysicalDisk, width: usize, color: bool) -> String
         let pct = seg.size_bytes as f64 * 100.0 / total as f64;
         match seg.index {
             Some(idx) => {
-                let slot = (idx - 1) % PALETTE.len();
                 let _ = writeln!(
                     out,
                     " {} {idx:>2}  {:<28} {:>10}  {pct:>4.1}%",
-                    swatch(color, PALETTE[slot], GLYPHS[slot]),
+                    swatch(color, PALETTE[slots[idx]], GLYPHS[slots[idx]]),
                     seg.label,
                     human_size(seg.size_bytes),
                 );
@@ -187,6 +195,32 @@ pub fn render_disk_bar(disk: &PhysicalDisk, width: usize, color: bool) -> String
         }
     }
     out
+}
+
+/// Map each partition's 1-based index to a palette slot: the largest partition
+/// gets `accent`, the rest take the other palette colours in index order. The
+/// returned vector is indexed by partition index (slot 0 is unused).
+fn partition_slots(segs: &[Segment], accent: usize) -> Vec<usize> {
+    let parts: Vec<(usize, u64)> = segs
+        .iter()
+        .filter_map(|s| s.index.map(|i| (i, s.size_bytes)))
+        .collect();
+    let largest = parts.iter().max_by_key(|(_, sz)| *sz).map(|(i, _)| *i);
+    let mut slots = vec![0usize; parts.len() + 1];
+    let mut next = 0usize;
+    for (i, _) in &parts {
+        slots[*i] = if Some(*i) == largest {
+            accent
+        } else {
+            while next % PALETTE.len() == accent {
+                next += 1;
+            }
+            let s = next % PALETTE.len();
+            next += 1;
+            s
+        };
+    }
+    slots
 }
 
 /// Render an at-a-glance overview comparing the **physical** disks' capacities —
@@ -361,6 +395,29 @@ mod tests {
         let d = disk(100, vec![part("p1", 0, 100, "T")]);
         let out = render_disk_bar(&d, 20, true);
         assert!(out.contains("\x1b["), "color mode must emit ANSI escapes");
+    }
+
+    #[test]
+    fn disk_bar_paints_largest_partition_with_accent() {
+        // p2 is the largest; with accent slot 2 ('+') it must carry that glyph,
+        // and a non-largest partition must not.
+        let d = disk(100, vec![part("p1", 0, 10, "A"), part("p2", 10, 90, "B")]);
+        let out = disk_bar(&d, 40, false, 2);
+        let line = |name: &str| {
+            out.lines()
+                .find(|l| l.contains(name))
+                .unwrap()
+                .trim_start()
+                .chars()
+                .next()
+                .unwrap()
+        };
+        assert_eq!(
+            line("p2"),
+            GLYPHS[2],
+            "largest partition uses the accent glyph"
+        );
+        assert_ne!(line("p1"), GLYPHS[2], "non-largest avoids the accent glyph");
     }
 
     fn whole(name: &str, size: u64, synthesized: bool) -> PhysicalDisk {
