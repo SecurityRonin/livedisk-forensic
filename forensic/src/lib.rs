@@ -113,8 +113,9 @@ pub fn analyse(disk: &PhysicalDisk) -> Vec<Finding> {
             Finding::observation(Severity::Info, Category::Provenance, "LIVE-SYNTHESIZED")
                 .source(source(disk))
                 .note(
-                    "synthesized device (container overlay), not a backing physical store; image \
-                     the underlying physical disk",
+                    "synthesized device — a container overlay (e.g. APFS container, \
+                     device-mapper/LVM) over one or more physical stores, not itself a backing \
+                     physical disk",
                 )
                 .build(),
         );
