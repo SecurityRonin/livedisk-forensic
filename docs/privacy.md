@@ -1,0 +1,20 @@
+# Privacy Policy
+
+**livedisk** is an open-source Rust library that runs entirely on your own
+machine.
+
+- **No data collection.** The software does not transmit, upload, or share any
+  data. Device listings and analysis results never leave your computer.
+- **No telemetry.** There is no analytics, crash reporting, phone-home, or
+  network activity of any kind in the library.
+- **No accounts.** The software requires no registration, login, or API key.
+
+Any devices you enumerate or analyse are read locally and the results are
+returned only to your own program. You are solely responsible for handling the
+evidence and reports you generate in accordance with your jurisdiction's laws
+and your engagement's chain-of-custody requirements.
+
+This policy applies to the software as distributed via crates.io and GitHub. It
+does not cover forks or modified copies.
+
+© 2026 Security Ronin Ltd

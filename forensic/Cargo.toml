@@ -1,0 +1,28 @@
+[package]
+name = "livedisk-forensic"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Forensic analyzer for live block devices — acquisition-integrity findings (mounted-during-acquisition, no write-blocker, removable media, 512e/4Kn sector mismatch, synthesized overlay) as graded forensicnomicon report::Finding, built on livedisk-core"
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/livedisk-forensic"
+keywords = ["forensics", "disk", "acquisition", "dfir", "block-device"]
+categories = ["filesystem", "os"]
+exclude = [".github/", ".pre-commit-config.yaml", "deny.toml", "renovate.json"]
+
+[features]
+default = []
+serde = ["dep:serde", "livedisk/serde", "forensicnomicon/serde"]
+
+[dependencies]
+livedisk = { workspace = true }
+forensicnomicon.workspace = true
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

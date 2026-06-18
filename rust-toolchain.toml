@@ -1,0 +1,6 @@
+[toolchain]
+# Dev/CI toolchain pinned to current stable (fleet policy). The declared MSRV
+# (Cargo.toml `rust-version`) is set separately and lower — it is the
+# downstream-facing compatibility promise, verified by the MSRV CI job.
+channel = "1.96.0"
+components = ["rustfmt", "clippy"]

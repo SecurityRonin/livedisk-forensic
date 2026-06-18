@@ -1,0 +1,35 @@
+[package]
+name = "livedisk-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Cross-platform live block-device enumeration — list physical disks and partitions on the running host (macOS IOKit, Linux sysfs, Windows DeviceIoControl) in one unified model, with proportional partition-layout rendering"
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/livedisk-core"
+keywords = ["forensics", "disk", "partition", "enumeration", "block-device"]
+categories = ["filesystem", "os", "hardware-support"]
+exclude = [".github/", ".pre-commit-config.yaml", "deny.toml", "renovate.json"]
+
+[lib]
+name = "livedisk"
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dependencies]
+thiserror = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+io-kit-sys = { workspace = true }
+core-foundation = { workspace = true }
+core-foundation-sys = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true }
+
+[lints]
+workspace = true

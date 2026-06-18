@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = ["core", "forensic"]
+
+# Single source of truth for fields shared by every member (DRY): bump version /
+# MSRV / license here once; members inherit via `field.workspace = true`.
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+# Published libraries keep a low, CI-verified MSRV (fleet policy); the dev
+# toolchain is pinned separately in rust-toolchain.toml.
+rust-version = "1.85"
+license = "Apache-2.0"
+repository = "https://github.com/SecurityRonin/livedisk-forensic"
+homepage = "https://github.com/SecurityRonin/livedisk-forensic"
+
+# Single source of truth for dependency versions (DRY): declare each once;
+# members write `dep.workspace = true`. The inter-crate `livedisk` version lives
+# here too, so a bump touches one line instead of every member + dev-dep.
+[workspace.dependencies]
+livedisk = { path = "core", version = "0.1.0", package = "livedisk-core" }
+forensicnomicon = "0.5"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Platform FFI for the live-enumeration backends (referenced per-target in core).
+io-kit-sys = "0.5"
+core-foundation = "0.10"
+core-foundation-sys = "0.8"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Ioctl",
+    "Win32_System_IO",
+] }
+
+[workspace.lints.rust]
+# `deny`, not `forbid`: the macOS/Windows enumeration backends are inherently
+# FFI and carry scoped `#[allow(unsafe_code)]` + per-call `// SAFETY:` notes.
+# Linux + all pure logic stay unsafe-free.
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+all = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+module_name_repetitions = { level = "allow", priority = 1 }
+must_use_candidate = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+missing_panics_doc = { level = "allow", priority = 1 }
+cast_possible_truncation = { level = "allow", priority = 1 }
+cast_possible_wrap = { level = "allow", priority = 1 }
+cast_sign_loss = { level = "allow", priority = 1 }
+cast_precision_loss = { level = "allow", priority = 1 }
+cast_lossless = { level = "allow", priority = 1 }
+unreadable_literal = { level = "allow", priority = 1 }
+# `disks` vs `disk0` etc. in tests are deliberately close, not confusing.
+similar_names = { level = "allow", priority = 1 }
