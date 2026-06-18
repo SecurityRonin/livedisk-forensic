@@ -27,7 +27,7 @@ for disk in livedisk::enumerate()? {
 | Code | Meaning |
 |---|---|
 | `LIVE-MOUNTED` | a volume is mounted during acquisition (live writes may alter the image) |
-| `LIVE-WRITABLE` | the device is writable; no hardware write-blocker detected |
+| `LIVE-WRITABLE` | the device being **acquired** is writable — no write-blocker engaged (emitted only by `analyse_target`, not the host overview, since every live disk is writable) |
 | `LIVE-REMOVABLE` | removable media |
 | `LIVE-SECTOR-4KN` | logical/physical sector sizes differ (512e/4Kn) |
 | `LIVE-SYNTHESIZED` | a synthesized container overlay, not a backing physical store |
