@@ -24,6 +24,8 @@ fuzzing = []
 
 [dependencies]
 thiserror = { workspace = true }
+# Shared never-panic bounded byte readers (le_u16/le_u32) for drive-layout fields.
+forensic-bytes = { version = "0.1", path = "../../forensic-bytes" }
 serde = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
