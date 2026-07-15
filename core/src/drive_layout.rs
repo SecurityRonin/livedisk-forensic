@@ -10,7 +10,7 @@
 //! host-independent, so the tests run anywhere; only the `DeviceIoControl` call
 //! that fills the buffer is Windows-gated in `windows`.
 
-use forensic_bytes::{le_u16, le_u32};
+use safe_read::{le_u16, le_u32};
 
 /// Byte offset of the first `PARTITION_INFORMATION_EX` in the layout buffer.
 const PARTITION_ENTRY_OFFSET: usize = 48;
