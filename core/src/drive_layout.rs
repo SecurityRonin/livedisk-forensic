@@ -10,6 +10,8 @@
 //! host-independent, so the tests run anywhere; only the `DeviceIoControl` call
 //! that fills the buffer is Windows-gated in `windows`.
 
+use forensic_bytes::{le_u16, le_u32};
+
 /// Byte offset of the first `PARTITION_INFORMATION_EX` in the layout buffer.
 const PARTITION_ENTRY_OFFSET: usize = 48;
 /// Size of one `PARTITION_INFORMATION_EX`.
@@ -51,8 +53,8 @@ pub(super) fn parse_drive_layout(buf: &[u8]) -> ParsedLayout {
             partitions: Vec::new(),
         };
     }
-    let style = u32_le(buf, 0);
-    let count = u32_le(buf, 4) as usize;
+    let style = le_u32(buf, 0);
+    let count = le_u32(buf, 4) as usize;
     let mut partitions = Vec::new();
     for i in 0..count {
         let e = PARTITION_ENTRY_OFFSET + i * ENTRY_SIZE;
@@ -82,7 +84,7 @@ pub(super) fn parse_drive_layout(buf: &[u8]) -> ParsedLayout {
             _ => (None, None),
         };
         partitions.push(ParsedPartition {
-            number: u32_le(entry, 24),
+            number: le_u32(entry, 24),
             start_offset: i64_le(entry, 8).max(0) as u64,
             length,
             type_desc,
@@ -97,9 +99,9 @@ pub(super) fn parse_drive_layout(buf: &[u8]) -> ParsedLayout {
 fn format_guid(b: &[u8]) -> String {
     format!(
         "{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
-        u32_le(b, 0),
-        u16_le(b, 4),
-        u16_le(b, 6),
+        le_u32(b, 0),
+        le_u16(b, 4),
+        le_u16(b, 6),
         b[8],
         b[9],
         b[10],
@@ -111,12 +113,6 @@ fn format_guid(b: &[u8]) -> String {
     )
 }
 
-fn u16_le(b: &[u8], o: usize) -> u16 {
-    u16::from_le_bytes([b[o], b[o + 1]])
-}
-fn u32_le(b: &[u8], o: usize) -> u32 {
-    u32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]])
-}
 fn i64_le(b: &[u8], o: usize) -> i64 {
     i64::from_le_bytes(b[o..o + 8].try_into().expect("8 bytes"))
 }
