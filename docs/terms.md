@@ -1,7 +1,7 @@
 # Terms of Service
 
 **livedisk** is free, open-source software licensed under the
-[Apache-2.0 License](../LICENSE). These terms supplement, but do not override,
+[Apache-2.0 License](https://github.com/SecurityRonin/livedisk-forensic/blob/main/LICENSE). These terms supplement, but do not override,
 that licence.
 
 - **As-is, no warranty.** The software is provided "as is", without warranty of
