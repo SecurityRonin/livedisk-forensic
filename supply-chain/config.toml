@@ -17,10 +17,10 @@ url = "https://raw.githubusercontent.com/google/rust-crate-audits/main/audits.to
 url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 
 [policy.livedisk-core]
-audit-as-crates-io = true
+audit-as-crates-io = false
 
 [policy.livedisk-forensic]
-audit-as-crates-io = true
+audit-as-crates-io = false
 
 [[exemptions.core-foundation]]
 version = "0.10.1"
@@ -48,14 +48,6 @@ criteria = "safe-to-run"
 
 [[exemptions.libc]]
 version = "0.2.186"
-criteria = "safe-to-deploy"
-
-[[exemptions.livedisk-core]]
-version = "0.2.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.livedisk-forensic]]
-version = "0.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.mach2]]
