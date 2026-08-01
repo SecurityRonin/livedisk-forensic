@@ -94,23 +94,24 @@ pub(super) fn parse_drive_layout(buf: &[u8]) -> ParsedLayout {
     ParsedLayout { style, partitions }
 }
 
-/// Format a 16-byte little-endian Windows GUID as its canonical uppercase
+/// Format a 16-byte mixed-endian Windows GUID as its canonical uppercase
 /// string (`EBD0A0A2-B9E5-4433-87C0-68B6B72699C7`).
+///
+/// Delegates the byte order to [`uuid::Uuid::from_bytes_le`] — first three
+/// fields little-endian, trailing eight as-is, exactly the on-disk Windows
+/// layout — rather than hand-rolling it (as `vsc-forensic` and `winevt-binxml`
+/// already do). Bytes beyond a short `b` read as zero, matching the
+/// out-of-range rule `safe-read` applies to the leading fields, so no length
+/// is trusted.
 fn format_guid(b: &[u8]) -> String {
-    format!(
-        "{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
-        le_u32(b, 0),
-        le_u16(b, 4),
-        le_u16(b, 6),
-        b[8],
-        b[9],
-        b[10],
-        b[11],
-        b[12],
-        b[13],
-        b[14],
-        b[15],
-    )
+    let mut raw = [0u8; 16];
+    let n = b.len().min(raw.len());
+    raw[..n].copy_from_slice(&b[..n]);
+    let mut buf = [0u8; uuid::fmt::Hyphenated::LENGTH];
+    uuid::Uuid::from_bytes_le(raw)
+        .hyphenated()
+        .encode_upper(&mut buf)
+        .to_string()
 }
 
 /// Read a signed 64-bit little-endian field; `0` when the window is out of
