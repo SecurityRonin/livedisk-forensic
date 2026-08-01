@@ -182,6 +182,17 @@ mod tests {
     }
 
     #[test]
+    fn format_guid_short_input_is_zero_filled_not_a_panic() {
+        // The trailing 8 bytes are indexed directly; a short slice must read as
+        // zero (safe-read's out-of-range semantics, already applied to the first
+        // three fields) rather than panic.
+        assert_eq!(
+            format_guid(&BASIC_DATA[..8]),
+            "EBD0A0A2-B9E5-4433-0000-000000000000"
+        );
+    }
+
+    #[test]
     fn parse_gpt_partition_with_type_and_name() {
         let mut b = one_entry_buf(STYLE_GPT);
         let e = PARTITION_ENTRY_OFFSET;
