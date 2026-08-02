@@ -131,6 +131,19 @@ fn utf16_name(b: &[u8]) -> String {
 mod tests {
     use super::*;
 
+    // `i64_le` is the one integer read in this module that does not go through
+    // `safe_read`, so it is the one that can still panic on a short window.
+    // No current caller can reach it (`parse_drive_layout` only ever hands it a
+    // full 144-byte entry), but the helper's own contract must match the rest of
+    // the file's: out of range reads 0, never panics (ADR-0012).
+    #[test]
+    fn i64_le_reads_zero_out_of_range() {
+        assert_eq!(i64_le(&[1, 2, 3], 0), 0, "short slice");
+        assert_eq!(i64_le(&[], 0), 0, "empty slice");
+        assert_eq!(i64_le(&[0u8; 8], 4), 0, "window runs past the end");
+        assert_eq!(i64_le(&[0u8; 8], usize::MAX), 0, "offset overflows usize");
+    }
+
     // Basic Data Partition type GUID, in on-disk mixed-endian byte order.
     const BASIC_DATA: [u8; 16] = [
         0xA2, 0xA0, 0xD0, 0xEB, 0xE5, 0xB9, 0x33, 0x44, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99,
