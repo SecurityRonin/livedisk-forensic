@@ -15,8 +15,6 @@
     reason = "IOKit/CoreFoundation FFI is inherently unsafe; isolated to collect_media + read_media, each call annotated with SAFETY"
 )]
 
-use std::ffi::CString;
-
 use super::{Error, Partition, PhysicalDisk};
 use core_foundation::base::{CFType, TCFType};
 use core_foundation::boolean::CFBoolean;
@@ -125,13 +123,13 @@ fn disk_index(name: &str) -> u64 {
 
 /// Walk the `IOMedia` registry into flat [`RawMedia`] records (FFI shell).
 fn collect_media() -> Result<Vec<RawMedia>, Error> {
-    let class = CString::new("IOMedia").expect("static string has no NUL");
     let mut out = Vec::new();
-    // SAFETY: `class` is a valid NUL-terminated C string for the duration of the
-    // call; IOServiceMatching copies it. The returned dictionary is consumed by
+    // SAFETY: `c"IOMedia"` is a `&'static CStr` — NUL-termination is guaranteed
+    // by the compiler and the pointer outlives the call; IOServiceMatching
+    // copies it. The returned dictionary is consumed by
     // IOServiceGetMatchingServices (it releases the reference), so we must not.
     unsafe {
-        let matching = IOServiceMatching(class.as_ptr());
+        let matching = IOServiceMatching(c"IOMedia".as_ptr());
         if matching.is_null() {
             return Err(Error::Os("IOServiceMatching(IOMedia) returned null".into()));
         }

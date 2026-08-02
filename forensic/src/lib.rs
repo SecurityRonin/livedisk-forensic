@@ -26,6 +26,11 @@
 //! # Ok::<(), livedisk::Error>(())
 //! ```
 
+// Tests assert on known-good fixtures, where a panic on an unexpected value is
+// the intended failure mode. Production code stays under the workspace's
+// `unwrap_used`/`expect_used` denies.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 use forensicnomicon::report::{Category, Finding, Severity, Source};
 use livedisk::PhysicalDisk;
 

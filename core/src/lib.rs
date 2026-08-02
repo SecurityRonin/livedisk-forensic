@@ -29,6 +29,11 @@
 //! needs root/Administrator. Backends therefore never silently return an empty
 //! list on a permission problem — they surface [`Error`].
 
+// Tests assert on known-good fixtures, where a panic on an unexpected value is
+// the intended failure mode. Production code stays under the workspace's
+// `unwrap_used`/`expect_used` denies.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 use core::fmt::Write as _;
 use std::fs::File;
 use std::io::{Seek, SeekFrom};
