@@ -10,7 +10,7 @@
 //! host-independent, so the tests run anywhere; only the `DeviceIoControl` call
 //! that fills the buffer is Windows-gated in `windows`.
 
-use safe_read::{le_u16, le_u32};
+use safe_read::{le_u16, le_u32, le_u64};
 
 /// Byte offset of the first `PARTITION_INFORMATION_EX` in the layout buffer.
 const PARTITION_ENTRY_OFFSET: usize = 48;
@@ -113,8 +113,12 @@ fn format_guid(b: &[u8]) -> String {
     )
 }
 
+/// Read a signed 64-bit little-endian field; `0` when the window is out of
+/// range. Reinterpreting `safe_read::le_u64` is bit-identical to
+/// `i64::from_le_bytes` (two's complement) and inherits its bounds check, so
+/// this reader matches the rest of the module instead of panicking.
 fn i64_le(b: &[u8], o: usize) -> i64 {
-    i64::from_le_bytes(b[o..o + 8].try_into().expect("8 bytes"))
+    le_u64(b, o) as i64
 }
 
 /// Decode a UTF-16LE region up to the first NUL, trimmed.
