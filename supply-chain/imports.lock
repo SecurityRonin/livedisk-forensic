@@ -21,6 +21,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.safe-read]]
+version = "0.2.0"
+when = "2026-07-17"
+user-id = 347968
+user-login = "h4x0r"
+user-name = "Albert Hui"
+
 [[publisher.slab]]
 version = "0.4.12"
 when = "2026-01-31"
